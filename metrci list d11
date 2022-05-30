@@ -1,0 +1,42 @@
+ec2
+
+p95_cpu           ->percentile        
+p99_cpu    		  ->percentile       
+avg_cpu    		  ->percentile       
+network_in        ->sum will be changed to max 
+network_out       ->sum will be changed to max
+p90_cpu    		  ->percentile       
+p50_cpu    		  ->percentile       
+max_p99  	      ->max	
+
+rds
+
+max_cpu                  ->max   
+avg_cpu                  ->avg
+database_connections        ->sum will be changed to max
+network_receive_throughput  ->sum will be changed to max
+
+
+
+s3
+get_requests      ->sum will be changed to max
+put_requests      ->sum will be changed to max
+
+elasticache
+avg_cpu            ->avg                   
+max_cpu            ->max               
+database_memory_usage_percentage ->avg
+curr_connections  ->sum will be changed to max
+
+ebs
+volume_read_bytes  ->sum will be changed to max
+volume_write_bytes ->sum will be changed to max
+
+elb
+consumed_lcus      ->sum will be changed to max
+pre_warmed_lcus    ->sum will be changed to max
+
+alb
+healthy_host_count ->sum will be changed to max
+request_count      ->sum will be changed to max
+consumed_lcus      ->sum will be changed to max

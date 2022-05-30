@@ -1,0 +1,35 @@
+dimension_crawler
+cost_insights_fact_crawler
+ec2_usage_insights_fact_crawler
+resource_id_to_tag_mapping_crawler
+cur_data_crawler(acc-buildlab-crowler)
+rds_usage_insights_fact_crawler
+metricstream_crawler(after partioning job)
+
+
+
+d11_cost_insights_v2 db
+
+d11-cost-insights-v2 s3
+
+
+EC2...
+CPU Utilization (p95 & p99 & average)
+Netwok In & Out
+Disk Read & Write
+
+RDS...
+
+CPU Utilization (Average & Max)
+DB Connection
+Netowrk Receive Throughput
+
+ElastiCache...
+Engine CPU (Average & Max)
+Database Uses memory Percentage
+Concurrent Connections
+
+ELB & ALB...
+Healthy Host Count
+Number of Request
+LCU (Prewarm vs Used)

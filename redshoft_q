@@ -1,0 +1,669 @@
+SELECT
+ad.account_name, sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+WHERE cif.charge_type NOT IN ('Refund','Credit','Tax','Fee')
+GROUP BY 1;
+
+
+SELECT
+ad.account_name,cif.date_dim_id,res.product_servicename,sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+JOIN acc_cost_v2.resource_dim res ON cif.aws_product_dim_id = res.aws_product_dim_id
+
+WHERE cif.charge_type NOT IN ('Refund','Credit','Tax','Fee') and
+res.product_servicename ='Amazon ElastiCache'
+and ad.account_name='Dream11 - Production'
+and (cif.date_dim_id = '20220401' or
+cif.date_dim_id = '20220415' or
+cif.date_dim_id = '20220402' or
+cif.date_dim_id = '20220403' or
+cif.date_dim_id = '20220404' or
+cif.date_dim_id = '20220405' or
+
+cif.date_dim_id = '20220406' or
+cif.date_dim_id = '20220407' or
+cif.date_dim_id = '20220408' or
+cif.date_dim_id = '20220409' or
+cif.date_dim_id = '20220410' or
+
+cif.date_dim_id = '20220411' or
+cif.date_dim_id = '20220412' or
+cif.date_dim_id = '20220413' or
+cif.date_dim_id = '20220414' )
+GROUP BY 1,2,3
+order by 2 desc;
+
+
+
+
+SELECT
+resource_tags_user_squad,
+SUM(CASE
+WHEN (line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN savings_plan_savings_plan_effective_cost
+WHEN (line_item_line_item_type = 'SavingsPlanRecurringFee') THEN (savings_plan_total_commitment_to_date - savings_plan_used_commitment)
+WHEN (line_item_line_item_type = 'SavingsPlanNegation') THEN 0
+WHEN (line_item_line_item_type = 'SavingsPlanUpfrontFee') THEN 0
+WHEN (line_item_line_item_type = 'DiscountedUsage') THEN reservation_effective_cost
+WHEN (line_item_line_item_type = 'RIFee') THEN (reservation_unused_amortized_upfront_fee_for_billing_period + reservation_unused_recurring_fee)
+WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN 0
+ELSE line_item_unblended_cost
+END) AS amortized_cost from raw_cost_usage_hourly_athena  where year='2022' and month='4' and line_item_usage_account_id='078210713173' and line_item_line_item_type not in ('Refund','Credit','Tax','Fee') group by 1,2
+order by amortized_cost desc
+
+
+SELECT
+cif.date_dim_id,td.resource_tags_user_squad, sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+JOIN acc_cost_v2.date_dim dd ON cif.date_dim_id = dd.date_dim_id
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+JOIN acc_cost_v2.tag_dim td ON cif.tag_dim_id = td.tag_dim_id
+WHERE cif.charge_type NOT IN ('Refund','Credit','Tax','Fee')
+AND dd.month_attr = '04' and dd.year_attr = '2022'
+and cif.aws_account_dim_id='078210713173'
+and resource_tags_user_squad='revenue'
+GROUP BY 1,2
+order by 1,2;
+
+
+
+SELECT
+dd.year_attr,dd.month_attr,res.product_servicename, sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+JOIN acc_cost_v2.date_dim dd ON cif.date_dim_id = dd.date_dim_id
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+JOIN acc_cost_v2.tag_dim td ON cif.tag_dim_id = td.tag_dim_id
+JOIN acc_cost_v2.resource_dim res ON cif.aws_product_dim_id = res.aws_product_dim_id
+
+
+
+
+and res.product_servicename='AWS Premium Support'
+GROUP BY 1,2,3
+order by 1,2;
+
+
+
+SELECT
+ad.account_name,cif.date_dim_id, sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+WHERE cif.charge_type NOT IN ('Refund','Credit','Tax','Fee')
+and(cif.date_dim_id = '20220401' or
+cif.date_dim_id = '20220415' or
+cif.date_dim_id = '20220402' or
+cif.date_dim_id = '20220403' or
+cif.date_dim_id = '20220404' or
+cif.date_dim_id = '20220405' or
+
+cif.date_dim_id = '20220406' or
+cif.date_dim_id = '20220407' or
+cif.date_dim_id = '20220408' or
+cif.date_dim_id = '20220409' or
+cif.date_dim_id = '20220410' or
+
+cif.date_dim_id = '20220411' or
+cif.date_dim_id = '20220412' or
+cif.date_dim_id = '20220413' or
+cif.date_dim_id = '20220414' )
+and cif.aws_account_dim_id='078210713173'
+GROUP BY 1,2
+order by 2;
+
+
+
+select usename as username, 
+database, 
+querytxt as query, 
+starttime, 
+endtime, 
+case aborted
+when 1 then 'YES'
+else 'NO'
+end as aborted
+from stl_query ql
+join svl_user_info us 
+     on ql.userid = us.usesysid
+where starttime < DATEADD(hour, -6, getdate())
+      and starttime > DATEADD(hour, -12, getdate())
+order by starttime desc;
+
+
+
+
+
+SELECT
+ad.account_name,cif.date_dim_id,res.product_servicename,sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+JOIN acc_cost_v2.resource_dim res ON cif.aws_product_dim_id = res.aws_product_dim_id
+
+WHERE cif.charge_type NOT IN ('Refund','Credit','Tax','Fee') and
+res.product_servicename='Amazon Relational Database Service'
+and ad.account_name='Dream11 - Production'
+and cif.date_dim_id like '202204%' 
+GROUP BY 1,2,3
+order by 2 desc;
+
+
+
+
+
+SELECT
+ad.account_name,cif.date_dim_id,res.product_servicename,sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+JOIN acc_cost_v2.resource_dim res ON cif.aws_product_dim_id = res.aws_product_dim_id
+
+WHERE cif.charge_type NOT IN ('Refund','Credit','Tax','Fee') and
+res.product_servicename ='Amazon Relational Database Service'
+and ad.account_name='Dream11 - Production'
+and (cif.date_dim_id = '20220401' or
+cif.date_dim_id = '20220415' or
+cif.date_dim_id = '20220402' or
+cif.date_dim_id = '20220403' or
+cif.date_dim_id = '20220404' or
+cif.date_dim_id = '20220405' or
+
+cif.date_dim_id = '20220406' or
+cif.date_dim_id = '20220407' or
+cif.date_dim_id = '20220408' or
+cif.date_dim_id = '20220409' or
+cif.date_dim_id = '20220410' or
+
+cif.date_dim_id = '20220411' or
+cif.date_dim_id = '20220412' or
+cif.date_dim_id = '20220413' or
+cif.date_dim_id = '20220414' )
+GROUP BY 1,2,3
+order by 2 desc;
+
+select * from acc_cost_v2.rds_usage_insights_fact where resource='teamservice-v2-instance-1' and date_dim_id like '202204%'
+order by date_dim_id desc;
+
+
+
+SELECT
+ad.account_name,res.product_servicename,sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+JOIN acc_cost_v2.resource_dim res ON cif.aws_product_dim_id = res.aws_product_dim_id
+
+WHERE cif.charge_type NOT IN ('Refund','Credit','Tax','Fee') and
+res.product_servicename ='Amazon Relational Database Service'
+and ad.account_name='Dream11 - Production'
+and (cif.date_dim_id = '20220401' or
+cif.date_dim_id = '20220415' or
+cif.date_dim_id = '20220402' or
+cif.date_dim_id = '20220403' or
+cif.date_dim_id = '20220404' or
+cif.date_dim_id = '20220405' or
+
+cif.date_dim_id = '20220406' or
+cif.date_dim_id = '20220407' or
+cif.date_dim_id = '20220408' or
+cif.date_dim_id = '20220409' or
+cif.date_dim_id = '20220410' or
+
+cif.date_dim_id = '20220411' or
+cif.date_dim_id = '20220412' or
+cif.date_dim_id = '20220413' or
+cif.date_dim_id = '20220414' )
+GROUP BY 1,2
+order by 2 desc;
+
+
+
+
+SELECT
+ad.account_name,res.product_servicename,sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+JOIN acc_cost_v2.resource_dim res ON cif.aws_product_dim_id = res.aws_product_dim_id
+
+WHERE cif.charge_type NOT IN ('Refund','Credit','Tax','Fee') and
+res.product_servicename ='Amazon Relational Database Service'
+and ad.account_name='Dream11 - Production'
+and (cif.date_dim_id = '20220501' or
+
+cif.date_dim_id = '20220502' or
+cif.date_dim_id = '20220503' or
+cif.date_dim_id = '20220504' or
+cif.date_dim_id = '20220505' or
+
+cif.date_dim_id = '20220506' or
+cif.date_dim_id = '20220507' or
+cif.date_dim_id = '20220508' or
+cif.date_dim_id = '20220509' or
+cif.date_dim_id = '20220510' )
+GROUP BY 1,2
+order by 2 desc;
+
+
+
+SELECT
+ad.account_name,cif.date_dim_id ,sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+JOIN acc_cost_v2.resource_dim res ON cif.aws_product_dim_id = res.aws_product_dim_id
+
+WHERE cif.charge_type NOT IN ('Refund','Credit','Tax','Fee') 
+
+and ad.account_name='Dream11 - Production'
+and (cif.date_dim_id = '20220501' or
+
+cif.date_dim_id = '20220502' or
+cif.date_dim_id = '20220503' or
+cif.date_dim_id = '20220504' or
+cif.date_dim_id = '20220505' or
+
+cif.date_dim_id = '20220506' or
+cif.date_dim_id = '20220507' or
+cif.date_dim_id = '20220508' or
+cif.date_dim_id = '20220509' or
+cif.date_dim_id = '20220510' )
+GROUP BY 1,2
+order by 2 desc;
+
+
+
+SELECT
+ad.account_name,sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+JOIN acc_cost_v2.resource_dim res ON cif.aws_product_dim_id = res.aws_product_dim_id
+
+WHERE cif.charge_type NOT IN ('Refund','Credit','Tax','Fee') 
+and ad.account_name='Dream11 - Production'
+and (cif.date_dim_id = '20220401' or
+cif.date_dim_id = '20220415' or
+cif.date_dim_id = '20220402' or
+cif.date_dim_id = '20220403' or
+cif.date_dim_id = '20220404' or
+cif.date_dim_id = '20220405' or
+
+cif.date_dim_id = '20220406' or
+cif.date_dim_id = '20220407' or
+cif.date_dim_id = '20220408' or
+cif.date_dim_id = '20220409' or
+cif.date_dim_id = '20220410' or
+
+cif.date_dim_id = '20220411' or
+cif.date_dim_id = '20220412' or
+cif.date_dim_id = '20220413' or
+cif.date_dim_id = '20220414' )
+GROUP BY 1
+order by 2 desc;
+
+
+
+
+SELECT
+ad.account_name,sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+JOIN acc_cost_v2.resource_dim res ON cif.aws_product_dim_id = res.aws_product_dim_id
+
+WHERE cif.charge_type NOT IN ('Refund','Credit','Tax','Fee') 
+and ad.account_name='Dream11 - Production'
+and 
+cif.date_dim_id like '202204%' 
+GROUP BY 1
+order by 2 desc;
+
+
+SELECT
+res.product_servicename,cif.charge_type,sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+JOIN acc_cost_v2.resource_dim res ON cif.aws_product_dim_id = res.aws_product_dim_id
+
+WHERE 
+
+ad.account_name='Dream11 - Production'
+and 
+cif.date_dim_id like '202204%' 
+and res.product_servicename like 'AWS Marketplace%'
+GROUP BY 1,2
+order by 3 desc;
+
+
+
+SELECT 
+date_format(cast(line_item_usage_start_date as date),'%Y%m%d'),
+SUM(CASE
+WHEN (line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN savings_plan_savings_plan_effective_cost
+WHEN (line_item_line_item_type = 'SavingsPlanRecurringFee') THEN (savings_plan_total_commitment_to_date - savings_plan_used_commitment)
+WHEN (line_item_line_item_type = 'SavingsPlanNegation') THEN 0
+WHEN (line_item_line_item_type = 'SavingsPlanUpfrontFee') THEN 0
+WHEN (line_item_line_item_type = 'DiscountedUsage') THEN reservation_effective_cost
+WHEN (line_item_line_item_type = 'RIFee') THEN (reservation_unused_amortized_upfront_fee_for_billing_period + reservation_unused_recurring_fee)
+WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN 0
+ELSE line_item_unblended_cost
+END) AS amortized_cost from raw_cost_usage_hourly_athena  
+where year='2022' and month='5' 
+and line_item_usage_account_id='078210713173' 
+and line_item_line_item_type not in ('Refund','Credit','Tax','Fee') 
+and (date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220501'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220502'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220503'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220504'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220505'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220506'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220507'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220508'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220509'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220510')
+
+group by 1
+--,2,3,4
+order by 1,amortized_cost desc;
+
+
+SELECT
+ad.account_name,cif.date_dim_id,sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+JOIN acc_cost_v2.resource_dim res ON cif.aws_product_dim_id = res.aws_product_dim_id
+
+WHERE cif.charge_type NOT IN ('Refund','Credit','Tax','Fee') 
+
+and ad.account_name='Dream11 - Production'
+and (cif.date_dim_id = '20220501' or
+
+cif.date_dim_id = '20220502' or
+cif.date_dim_id = '20220503' or
+cif.date_dim_id = '20220504' or
+cif.date_dim_id = '20220505' or
+
+cif.date_dim_id = '20220506' or
+cif.date_dim_id = '20220507' or
+cif.date_dim_id = '20220508' or
+cif.date_dim_id = '20220509' or
+cif.date_dim_id = '20220510' )
+GROUP BY 1,2
+order by 2 desc;
+
+
+
+SELECT
+dd.year_attr,dd.month_attr,res.product_servicename, sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+JOIN acc_cost_v2.date_dim dd ON cif.date_dim_id = dd.date_dim_id
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+JOIN acc_cost_v2.tag_dim td ON cif.tag_dim_id = td.tag_dim_id
+JOIN acc_cost_v2.resource_dim res ON cif.aws_product_dim_id = res.aws_product_dim_id
+and cif.charge_type not in ('Tax')
+and res.product_servicename='AWS Premium Support'
+and dd.year_attr='2022' and dd.month_attr='03'
+GROUP BY 1,2,3
+order by 1,2;
+
+
+
+select ad.account_name,ad.aws_account_dim_id,sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+JOIN acc_cost_v2.date_dim dd ON cif.date_dim_id = dd.date_dim_id
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+JOIN acc_cost_v2.tag_dim td ON cif.tag_dim_id = td.tag_dim_id
+JOIN acc_cost_v2.resource_dim res ON cif.aws_product_dim_id = res.aws_product_dim_id
+WHERE cif.charge_type NOT IN ('Refund','Credit','Tax','Fee') 
+and cif.date_dim_id like '202205%'
+group by 1,2
+order by 3 desc;
+
+
+SELECT
+res.product_servicename,cif.charge_type,sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+JOIN acc_cost_v2.resource_dim res ON cif.aws_product_dim_id = res.aws_product_dim_id
+
+WHERE 
+
+ad.account_name='Dream11 - Production'
+and 
+cif.date_dim_id like '202204%' 
+and res.product_servicename like 'AWS Marketplace%'
+or res.product_servicename like 'OCB%'
+GROUP BY 1,2
+order by 3 desc;
+
+
+
+select avg(coverage_coveragepercentage) from acc_cost_v2.savings_coverage where date_dim_id like '202202%' ;
+
+
+SELECT
+sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+JOIN acc_cost_v2.date_dim dd ON cif.date_dim_id = dd.date_dim_id
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+JOIN acc_cost_v2.tag_dim td ON cif.tag_dim_id = td.tag_dim_id
+WHERE cif.charge_type NOT IN ('Refund','Credit','Tax','Fee')
+AND dd.month_attr = '05' and dd.year_attr = '2022'
+and cif.aws_account_dim_id='078210713173'
+and resource_tags_user_squad='shared'
+and
+(cif.date_dim_id = '20220501' or
+
+cif.date_dim_id = '20220502' or
+cif.date_dim_id = '20220503' or
+cif.date_dim_id = '20220504' or
+cif.date_dim_id = '20220505' or
+
+cif.date_dim_id = '20220506' or
+cif.date_dim_id = '20220507' or
+cif.date_dim_id = '20220508' or
+cif.date_dim_id = '20220509' or
+cif.date_dim_id = '20220510' or
+cif.date_dim_id = '20220511' or
+
+cif.date_dim_id = '20220512' or
+cif.date_dim_id = '20220513' or
+cif.date_dim_id = '20220514' or
+cif.date_dim_id = '20220515' or
+
+cif.date_dim_id = '20220516' or
+cif.date_dim_id = '20220517' or
+cif.date_dim_id = '20220518' or
+cif.date_dim_id = '20220519' or
+cif.date_dim_id = '20220520' )
+order by 1;
+
+
+SELECT
+cif.date_dim_id,
+sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+JOIN acc_cost_v2.date_dim dd ON cif.date_dim_id = dd.date_dim_id
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+JOIN acc_cost_v2.tag_dim td ON cif.tag_dim_id = td.tag_dim_id
+WHERE cif.charge_type NOT IN ('Refund','Credit','Tax','Fee')
+AND dd.month_attr = '05' and dd.year_attr = '2022'
+and cif.aws_account_dim_id='640708248978'
+and ad.bill_payer_account_id='078210713173'
+
+and
+(cif.date_dim_id = '20220501' or
+
+cif.date_dim_id = '20220502' or
+cif.date_dim_id = '20220503' or
+cif.date_dim_id = '20220504' or
+cif.date_dim_id = '20220505' or
+
+cif.date_dim_id = '20220506' or
+cif.date_dim_id = '20220507' or
+cif.date_dim_id = '20220508' or
+cif.date_dim_id = '20220509' or
+cif.date_dim_id = '20220510' or
+cif.date_dim_id = '20220511' or
+
+cif.date_dim_id = '20220512' or
+cif.date_dim_id = '20220513' or
+cif.date_dim_id = '20220514' or
+cif.date_dim_id = '20220515' or
+
+cif.date_dim_id = '20220516' or
+cif.date_dim_id = '20220517' or
+cif.date_dim_id = '20220518' or
+cif.date_dim_id = '20220519' or
+cif.date_dim_id = '20220520' )
+group by 1
+order by 1;
+
+
+
+
+SELECT
+
+sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+JOIN acc_cost_v2.date_dim dd ON cif.date_dim_id = dd.date_dim_id
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+JOIN acc_cost_v2.tag_dim td ON cif.tag_dim_id = td.tag_dim_id
+WHERE cif.charge_type NOT IN ('Refund','Credit','Tax','Fee')
+AND dd.month_attr = '05' and dd.year_attr = '2022'
+and cif.aws_account_dim_id='640708248978'
+and ad.bill_payer_account_id='078210713173'
+
+and
+(cif.date_dim_id = '20220501' or
+
+cif.date_dim_id = '20220502' or
+cif.date_dim_id = '20220503' or
+cif.date_dim_id = '20220504' or
+cif.date_dim_id = '20220505' or
+
+cif.date_dim_id = '20220506' or
+cif.date_dim_id = '20220507' or
+cif.date_dim_id = '20220508' or
+cif.date_dim_id = '20220509' or
+cif.date_dim_id = '20220510' or
+cif.date_dim_id = '20220511' or
+
+cif.date_dim_id = '20220512' or
+cif.date_dim_id = '20220513' or
+cif.date_dim_id = '20220514' or
+cif.date_dim_id = '20220515' or
+
+cif.date_dim_id = '20220516' or
+cif.date_dim_id = '20220517' or
+cif.date_dim_id = '20220518' or
+cif.date_dim_id = '20220519' or
+cif.date_dim_id = '20220520' )
+
+order by 1;
+
+
+
+
+SELECT
+
+sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+JOIN acc_cost_v2.date_dim dd ON cif.date_dim_id = dd.date_dim_id
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+JOIN acc_cost_v2.tag_dim td ON cif.tag_dim_id = td.tag_dim_id
+WHERE cif.charge_type NOT IN ('Refund','Credit','Tax','Fee')
+AND dd.month_attr = '05' and dd.year_attr = '2022'
+and cif.aws_account_dim_id='078210713173'
+and resource_tags_user_squad='datateam'
+and
+(cif.date_dim_id = '20220501' or
+
+cif.date_dim_id = '20220502' or
+cif.date_dim_id = '20220503' or
+cif.date_dim_id = '20220504' or
+cif.date_dim_id = '20220505' or
+
+cif.date_dim_id = '20220506' or
+cif.date_dim_id = '20220507' or
+cif.date_dim_id = '20220508' or
+cif.date_dim_id = '20220509' or
+cif.date_dim_id = '20220510' or
+cif.date_dim_id = '20220511' or
+
+cif.date_dim_id = '20220512' or
+cif.date_dim_id = '20220513' or
+cif.date_dim_id = '20220514' or
+cif.date_dim_id = '20220515' or
+
+cif.date_dim_id = '20220516' or
+cif.date_dim_id = '20220517' or
+cif.date_dim_id = '20220518' or
+cif.date_dim_id = '20220519' or
+cif.date_dim_id = '20220520' )
+
+order by 1;
+
+
+
+SELECT
+
+sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+JOIN acc_cost_v2.date_dim dd ON cif.date_dim_id = dd.date_dim_id
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+JOIN acc_cost_v2.tag_dim td ON cif.tag_dim_id = td.tag_dim_id
+JOIN acc_cost_v2.resource_dim res ON cif.aws_product_dim_id = res.aws_product_dim_id
+
+WHERE cif.charge_type NOT IN ('Refund','Credit','Tax','Fee')
+AND dd.month_attr = '04' and dd.year_attr = '2022'
+and cif.aws_account_dim_id='078210713173'
+and cif.purchase_option='OnDemand'
+and cif.date_dim_id like '202204%'
+
+order by 1;
+
+
+
+SELECT
+cif.date_dim_id,res.product_servicename,cif.charge_type,sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+JOIN acc_cost_v2.resource_dim res ON cif.aws_product_dim_id = res.aws_product_dim_id
+
+WHERE 
+res.product_servicename like 'AWS Mar%'
+and cif.aws_account_dim_id='078210713173'
+
+GROUP BY 1,2,3
+order by 4 desc;
+
+
+SELECT
+cif.purchase_option,
+sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+JOIN acc_cost_v2.date_dim dd ON cif.date_dim_id = dd.date_dim_id
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+JOIN acc_cost_v2.tag_dim td ON cif.tag_dim_id = td.tag_dim_id
+JOIN acc_cost_v2.resource_dim res ON cif.aws_product_dim_id = res.aws_product_dim_id
+
+WHERE cif.charge_type NOT IN ('Refund','Credit','Tax')
+AND dd.month_attr = '04' and dd.year_attr = '2022'
+and cif.aws_account_dim_id='078210713173'
+
+and res.product_servicename != 'AWS Premium Support'
+and cif.date_dim_id like '202204%'
+group by 1
+order by 1;
+
+
+

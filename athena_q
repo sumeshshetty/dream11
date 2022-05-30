@@ -1,0 +1,330 @@
+SELECT distinct(partition_0) FROM "build_lab"."raw_28" 
+where namespace='AWS/RDS' 
+and dimensions.dbinstanceidentifier='teamservice-v2-instance-1' 
+and metric_name='DatabaseConnections'
+order by 1 desc;
+
+select * from raw_cost_usage_hourly_athena where (line_item_product_code like '%OCB%' and line_item_product_code != 'OCBPremiumSupport' ) and month = '1' and year = '2022' and line_item_line_item_type='Fee'
+
+
+select * from summary_view where (product_code like '%OCB%' and product_code != 'OCBPremiumSupport' ) and month = '1' and year = '2022'
+and line_item_line_item_type='Fee'
+
+
+select * from summary_view_second where (product_code = 'OCBElasticComputeCloud' and product_code != 'OCBPremiumSupport' ) and month = '1' and year = '2022'
+
+select * from ""  where product_servicename ='' 
+and line_item_product_code = 'OCBElasticComputeCloud' 
+and month = '1' and year = '2022' limit 10
+
+
+select * from raw_cost_usage_hourly_athena
+where 
+date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220401'
+and 
+(identity_line_item_id='nuhitx3dbwjqf7zicvwh5eypo3bfs6rw6varcwnkpiw6bpwt5xpa' or
+identity_line_item_id='tu6tu63gblvtrhpostdrxhwtxk6cacrwqxv7etfcn4wtppml6mwa' or
+identity_line_item_id='rfmo47qqlnwcho2d6lcu67y6vbsnzamrtybt2xk26yzbzmlgyhiq' or
+identity_line_item_id='go6d5yqar7phowxo2jhljvffiwp57loymuwhq7wao5c6nmq4trlq' or
+identity_line_item_id='eb5tuo7fp5bhbbfyxhy7sfaxqlkqzvx3skufavvdohbin3r3ezfq' or
+identity_line_item_id='bfm75fbt5np5nbw5jxeh3qgqlaqlu4zzekcu7dovmr5gq6fjorcq' or
+identity_line_item_id='3cz7b2fbmlfx6leadqa46mea6t45dajgtypla5qfrtjgipinkqia' or
+identity_line_item_id='prrxyghrowcwky2p2pwrometig6odptjvjzdlc6x3k7ovmi4eoaq' or
+identity_line_item_id='tq6g3b46mo6smil5xejbl5poob2bdhohgofymk5r5p7yjd74gg6a' or
+identity_line_item_id='ypp2qrqiipqvm3hg3s3ar7unydpockdljzxmoxjg2bdyo74bdsza' )
+
+
+
+SELECT 
+line_item_usage_account_id,date_format(cast(line_item_usage_start_date as date),'%Y%m%d')  as date_dim_id,
+
+SUM(CASE
+WHEN (line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN savings_plan_savings_plan_effective_cost
+WHEN (line_item_line_item_type = 'SavingsPlanRecurringFee') THEN (savings_plan_total_commitment_to_date - savings_plan_used_commitment)
+WHEN (line_item_line_item_type = 'SavingsPlanNegation') THEN 0
+WHEN (line_item_line_item_type = 'SavingsPlanUpfrontFee') THEN 0
+WHEN (line_item_line_item_type = 'DiscountedUsage') THEN reservation_effective_cost
+WHEN (line_item_line_item_type = 'RIFee') THEN (reservation_unused_amortized_upfront_fee_for_billing_period + reservation_unused_recurring_fee)
+WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN 0
+ELSE line_item_unblended_cost
+END) AS amortized_cost from raw_cost_usage_hourly_athena  where year='2022' and month='4' and line_item_usage_account_id='078210713173' and line_item_line_item_type not in ('Refund','Credit','Tax','Fee') 
+--and date_format(cast(line_item_usage_start_date as date),'%Y%m%d') like '202204%'
+and product_servicename !=''
+
+--and line_item_product_code='AmazonRDS'
+and (date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220401'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220402'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220403'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220404'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220405'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220406'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220407'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220408'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220409'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220410'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220411'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220412'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220413'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220414'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220415')
+group by 1,2
+order by 2,amortized_cost desc;
+
+
+SELECT
+
+product_servicename,resource_tags_user_name,resource_tags_user_component,
+SUM(CASE
+WHEN (line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN savings_plan_savings_plan_effective_cost
+WHEN (line_item_line_item_type = 'SavingsPlanRecurringFee') THEN (savings_plan_total_commitment_to_date - savings_plan_used_commitment)
+WHEN (line_item_line_item_type = 'SavingsPlanNegation') THEN 0
+WHEN (line_item_line_item_type = 'SavingsPlanUpfrontFee') THEN 0
+WHEN (line_item_line_item_type = 'DiscountedUsage') THEN reservation_effective_cost
+WHEN (line_item_line_item_type = 'RIFee') THEN (reservation_unused_amortized_upfront_fee_for_billing_period + reservation_unused_recurring_fee)
+WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN 0
+ELSE line_item_unblended_cost
+END) AS amortized_cost from raw_cost_usage_hourly_athena  where year='2022' and month='4'
+and line_item_usage_account_id='078210713173' 
+and line_item_line_item_type not in ('Refund','Credit','Tax','Fee')
+and product_servicename='Amazon Elastic Compute Cloud'
+and resource_tags_user_name='search-hotnode-prod'
+and resource_tags_user_component=''
+
+select 
+line_item_usage_account_id,product_servicename,line_item_product_code,bill_billing_entity,line_item_usage_start_date,line_item_blended_cost from "raw_cost_usage_hourly_athena" 
+where month='4'
+and year='2022'
+--and date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220430'
+and bill_billing_entity='AWS Marketplace'
+
+SELECT * FROM "build_lab"."summary_view" 
+where year='2022'
+and month='4'
+and line_item_product_code='3m9bpok5g0737okmlsvcmd5kee'
+limit 10;
+
+
+select distinct("bill_billing_entity") from "raw_cost_usage_hourly_athena" 
+where month='4'
+and year='2022'
+and date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220430'
+
+select 
+line_item_usage_account_id,product_servicename,line_item_product_code,bill_billing_entity,line_item_usage_start_date,line_item_blended_cost from "raw_cost_usage_hourly_athena" 
+where month='4'
+and year='2022'
+--and date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220430'
+and bill_billing_entity='AWS Marketplace'
+
+select 
+* from "raw_cost_usage_hourly_athena" 
+where month='4'
+and year='2022'
+--and date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220430'
+and product_servicename= ''
+and bill_billing_entity='AWS Marketplace'
+
+SELECT * FROM "build_lab"."summary_view" 
+where year='2022'
+and month='4'
+and line_item_product_code='3m9bpok5g0737okmlsvcmd5kee'
+limit 10;
+
+SELECT 
+date_format(cast(line_item_usage_start_date as date),'%Y%m%d'),
+SUM(CASE
+WHEN (line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN savings_plan_savings_plan_effective_cost
+WHEN (line_item_line_item_type = 'SavingsPlanRecurringFee') THEN (savings_plan_total_commitment_to_date - savings_plan_used_commitment)
+WHEN (line_item_line_item_type = 'SavingsPlanNegation') THEN 0
+WHEN (line_item_line_item_type = 'SavingsPlanUpfrontFee') THEN 0
+WHEN (line_item_line_item_type = 'DiscountedUsage') THEN reservation_effective_cost
+WHEN (line_item_line_item_type = 'RIFee') THEN (reservation_unused_amortized_upfront_fee_for_billing_period + reservation_unused_recurring_fee)
+WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN 0
+ELSE line_item_unblended_cost
+END) AS amortized_cost from raw_cost_usage_hourly_athena  
+where year='2022' and month='4' 
+--and line_item_usage_account_id='078210713173' 
+and line_item_line_item_type not in ('Refund','Credit','Tax','Fee') 
+and (product_servicename='Amazon Relational Database Service'
+or (product_servicename='' and line_item_product_code='AmazonRDS'))
+and (date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220401'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220402'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220403'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220404'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220405'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220406'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220407'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220408'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220409'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220410'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220411'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220412'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220413'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220414'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220415')
+
+group by 1
+--,2,3,4
+order by 1,amortized_cost desc;
+
+#24749.51287639119
+#19500 approx
+#89388.45
+
+
+SELECT 
+
+date_format(cast(line_item_usage_start_date as date),'%Y%m%d') as date_dim_id,
+line_item_usage_type,line_item_operation,
+
+SUM(CASE
+WHEN (line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN savings_plan_savings_plan_effective_cost
+WHEN (line_item_line_item_type = 'SavingsPlanRecurringFee') THEN (savings_plan_total_commitment_to_date - savings_plan_used_commitment)
+WHEN (line_item_line_item_type = 'SavingsPlanNegation') THEN 0
+WHEN (line_item_line_item_type = 'SavingsPlanUpfrontFee') THEN 0
+WHEN (line_item_line_item_type = 'DiscountedUsage') THEN reservation_effective_cost
+WHEN (line_item_line_item_type = 'RIFee') THEN (reservation_unused_amortized_upfront_fee_for_billing_period + reservation_unused_recurring_fee)
+WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN 0
+ELSE line_item_unblended_cost
+END) AS amortized_cost ,sum(reservation_effective_cost) 
+from raw_cost_usage_hourly_athena  
+where year='2022' and month='4' 
+and line_item_usage_account_id='078210713173' 
+and line_item_line_item_type not in ('Refund','Credit','Tax','Fee') 
+--and (product_servicename='Amazon Relational Database Service'
+and (line_item_product_code='AmazonRDS')
+--and line_item_usage_type like 'InstanceUsage:db%'
+--and  line_item_operation like 'CreateDBInstance%'
+and (date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220401')
+
+group by 1,2,3
+order by 1,amortized_cost desc;
+
+
+
+SELECT 
+date_format(cast(line_item_usage_start_date as date),'%Y%m%d'),
+SUM(CASE
+WHEN (line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN savings_plan_savings_plan_effective_cost
+WHEN (line_item_line_item_type = 'SavingsPlanRecurringFee') THEN (savings_plan_total_commitment_to_date - savings_plan_used_commitment)
+WHEN (line_item_line_item_type = 'SavingsPlanNegation') THEN 0
+WHEN (line_item_line_item_type = 'SavingsPlanUpfrontFee') THEN 0
+WHEN (line_item_line_item_type = 'DiscountedUsage') THEN reservation_effective_cost
+WHEN (line_item_line_item_type = 'RIFee') THEN (reservation_unused_amortized_upfront_fee_for_billing_period + reservation_unused_recurring_fee)
+WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN 0
+ELSE line_item_unblended_cost
+END) AS amortized_cost from raw_cost_usage_hourly_athena  
+where year='2022' and month='5' 
+and line_item_usage_account_id='078210713173' 
+and line_item_line_item_type not in ('Refund','Credit','Tax','Fee') 
+and (date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220501'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220502'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220503'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220504'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220505'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220506'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220507'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220508'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220509'
+or date_format(cast(line_item_usage_start_date as date),'%Y%m%d')='20220510')
+
+group by 1
+
+order by 1,amortized_cost desc;
+
+
+
+
+select distinct(line_item_operation) from "raw_cost_usage_hourly_athena" 
+where product_servicename='Amazon Elastic Compute Cloud'
+--and resource_tags_user_squad ='' 
+and resource_tags_user_component='' 
+
+and resource_tags_user_name='datahighway-events-kafka'
+and year='2022'
+and month='4'
+and line_item_usage_account_id='078210713173'
+limit 10
+
+
+SELECT distinct line_item_usage_type FROM "raw_cost_usage_hourly_athena" 
+where
+resource_tags_user_name ='datahighway-events-kafka' and
+(resource_tags_user_datastore = '' OR resource_tags_user_datastore = Null) and
+resource_tags_user_service = 'shared' and
+year='2022' and month='4'
+and identity_time_interval = '2022-04-29T23:00:00Z/2022-04-30T00:00:00Z'
+
+
+
+SELECT resource_tags_user_component,"line_item_usage_start_date" FROM "build_lab"."raw_cost_usage_hourly_athena"
+where resource_tags_user_name='search-hotnode-prod'
+and year='2022'
+and month='5'
+and resource_tags_user_component='datastore'
+
+
+SELECT distinct(resource_tags_user_) FROM "build_lab"."raw_cost_usage_hourly_athena"
+where resource_tags_user_name='search-hotnode-prod'
+limit 10;
+
+
+
+SELECT product_servicename,line_item_product_code,
+         SUM(CASE
+    WHEN (line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN
+    savings_plan_savings_plan_effective_cost
+    WHEN (line_item_line_item_type = 'SavingsPlanRecurringFee') THEN
+    (savings_plan_total_commitment_to_date - savings_plan_used_commitment)
+    WHEN (line_item_line_item_type = 'SavingsPlanNegation') THEN
+    0
+    WHEN (line_item_line_item_type = 'SavingsPlanUpfrontFee') THEN
+    0
+    WHEN (line_item_line_item_type = 'DiscountedUsage') THEN
+    reservation_effective_cost
+    WHEN (line_item_line_item_type = 'RIFee') THEN
+    (reservation_unused_amortized_upfront_fee_for_billing_period + reservation_unused_recurring_fee)
+    WHEN ((line_item_line_item_type = 'Fee')
+        AND (reservation_reservation_a_r_n <> '')) THEN
+    0
+    ELSE line_item_unblended_cost END) AS amortized_cost
+FROM raw_cost_usage_hourly_athena
+WHERE year='2022'
+        AND month='1'
+        AND line_item_usage_account_id='078210713173'
+        AND line_item_line_item_type NOT IN ('Refund','Credit','Tax','Fee')
+         and product_servicename='AWS Data Transfer'
+          and line_item_product_code='AmazonEC2'
+GROUP BY  product_servicename,line_item_product_code
+ORDER BY  amortized_cost desc
+
+
+
+SELECT
+product_servicename,
+SUM(CASE
+WHEN (line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN savings_plan_savings_plan_effective_cost
+WHEN (line_item_line_item_type = 'SavingsPlanRecurringFee') THEN (savings_plan_total_commitment_to_date - savings_plan_used_commitment)
+WHEN (line_item_line_item_type = 'SavingsPlanNegation') THEN 0
+WHEN (line_item_line_item_type = 'SavingsPlanUpfrontFee') THEN 0
+WHEN (line_item_line_item_type = 'DiscountedUsage') THEN reservation_effective_cost
+WHEN (line_item_line_item_type = 'RIFee') THEN (reservation_unused_amortized_upfront_fee_for_billing_period + reservation_unused_recurring_fee)
+WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN 0
+ELSE line_item_unblended_cost
+END) AS amortized_cost from raw_cost_usage_hourly_athena  where year='2021' and month='10' and line_item_usage_account_id='078210713173' and line_item_line_item_type not in ('Refund','Credit','Tax','Fee') group by 1
+order by amortized_cost desc;
+
+
+SELECT
+resource_tags_user_squad,resource_tags_user_component,
+SUM(CASE
+WHEN (line_item_line_item_type = 'SavingsPlanCoveredUsage') THEN savings_plan_savings_plan_effective_cost
+WHEN (line_item_line_item_type = 'SavingsPlanRecurringFee') THEN (savings_plan_total_commitment_to_date - savings_plan_used_commitment)
+WHEN (line_item_line_item_type = 'SavingsPlanNegation') THEN 0
+WHEN (line_item_line_item_type = 'SavingsPlanUpfrontFee') THEN 0
+WHEN (line_item_line_item_type = 'DiscountedUsage') THEN reservation_effective_cost
+WHEN (line_item_line_item_type = 'RIFee') THEN (reservation_unused_amortized_upfront_fee_for_billing_period + reservation_unused_recurring_fee)
+WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '')) THEN 0
+ELSE line_item_unblended_cost
+END) AS amortized_cost from raw_cost_usage_hourly_athena  where year='2021' and month='10' and line_item_usage_account_id='078210713173' and line_item_line_item_type not in ('Refund','Credit','Tax','Fee') group by 1,2
+order by amortized_cost desc
