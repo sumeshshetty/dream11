@@ -666,4 +666,27 @@ group by 1
 order by 1;
 
 
+          red/looker     CE 
+savings   561729         553900   7829
+reserved  465402         497177   31775
 
+
+
+
+SELECT
+cif.purchase_option,
+sum(cif.amortized_cost) as amortized_cost
+FROM acc_cost_v2.cost_insights_fact cif
+JOIN acc_cost_v2.date_dim dd ON cif.date_dim_id = dd.date_dim_id
+JOIN acc_cost_v2.account_dim ad ON cif.aws_account_dim_id = ad.aws_account_dim_id
+JOIN acc_cost_v2.tag_dim td ON cif.tag_dim_id = td.tag_dim_id
+JOIN acc_cost_v2.resource_dim res ON cif.aws_product_dim_id = res.aws_product_dim_id
+
+WHERE cif.charge_type NOT IN ('Refund','Credit','Tax')
+AND dd.month_attr = '03' and dd.year_attr = '2022'
+and cif.aws_account_dim_id='078210713173'
+
+and res.product_servicename != 'AWS Premium Support'
+and cif.date_dim_id like '202203%'
+group by 1
+order by 1;

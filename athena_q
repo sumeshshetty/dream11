@@ -328,3 +328,5 @@ WHEN ((line_item_line_item_type = 'Fee') AND (reservation_reservation_a_r_n <> '
 ELSE line_item_unblended_cost
 END) AS amortized_cost from raw_cost_usage_hourly_athena  where year='2021' and month='10' and line_item_usage_account_id='078210713173' and line_item_line_item_type not in ('Refund','Credit','Tax','Fee') group by 1,2
 order by amortized_cost desc
+
+### 
